@@ -20,22 +20,37 @@ hexo.extend.filter.register('after_post_render', function(data) {
 
   hexo.log.info("rendering KaTex");
 
+  function unescapeHtml(html) {
+    var regex = {
+      '&': /&amp;/g,
+      '<': /&lt;/g,
+      '>': /&gt;/g,
+      '"': /&quot;/g,
+      "'": /&#039;/g,
+      " ": /&nbsp;/g
+    };
+    for (var key in regex) {
+      html = html.replace(regex[key], key);
+    }
+    return html;
+}
+
   // display mode: \[ and \]
   data.content = data.content.replace(/\[<br>([^\$\n]+)<br>\]/g, function(matched, group) {
     hexo.log.info("Compiling : " + group);
-    return katex.renderToString(group, { displayMode: true });
+    return katex.renderToString(unescapeHtml(group), { displayMode: true });
   });
 
   // display mode: double dollars
   data.content = data.content.replace(/\$\$([^\$\n]+)\$\$/g, function(matched, group) {
     hexo.log.info("Compiling : " + group);
-    return katex.renderToString(group, { displayMode: true });
+    return katex.renderToString(unescapeHtml(group), { displayMode: true });
   });
 
   // inline mode: single dollars
   data.content = data.content.replace(/\$([^\$\n]+)\$/g, function(matched, group) {
     hexo.log.info("Compiling : " + group);
-    return katex.renderToString(group, { displayMode: false });
+    return katex.renderToString(unescapeHtml(group), { displayMode: false });
   });
 
   data.content = util.htmlTag('link',{
