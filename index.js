@@ -1,29 +1,48 @@
 'use strict';
 
 var katex = require('katex'),
-	util = require('hexo-util');
+  util = require('hexo-util');
 
 /**
 * {% katex [displayMode=true] %}
 */
-
-hexo.extend.tag.register('katex', function(args, content){
-	var displayMode = (args[0] && args[0]!== "true") ? false : true;
-
-	return katex.renderToString(content, {
-		displayMode: displayMode
-	});
+hexo.extend.tag.register('katex', function(args, content) {
+  var displayMode = (args[0] && args[0]!== "true") ? false : true;
+  return katex.renderToString(content, {
+    displayMode: displayMode
+  });
 }, {ends: true});
 
 /*
 * prepend link to Khan Academy CSS
 */
-hexo.extend.filter.register('after_post_render', function(data){
-	data.content = util.htmlTag('link',{
-		rel: 'stylesheet',
-		type: 'text/css',
-		href: 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css'
-	}) + data.content;
+hexo.extend.filter.register('after_post_render', function(data) {
 
-	return data;
+  hexo.log.info("rendering KaTex");
+
+  // display mode: \[ and \]
+  data.content = data.content.replace(/\[<br>([^\$\n]+)<br>\]/g, function(matched, group) {
+    hexo.log.info("Compiling : " + group);
+    return katex.renderToString(group, { displayMode: true });
+  });
+
+  // display mode: double dollars
+  data.content = data.content.replace(/\$\$([^\$\n]+)\$\$/g, function(matched, group) {
+    hexo.log.info("Compiling : " + group);
+    return katex.renderToString(group, { displayMode: true });
+  });
+
+  // inline mode: single dollars
+  data.content = data.content.replace(/\$([^\$\n]+)\$/g, function(matched, group) {
+    hexo.log.info("Compiling : " + group);
+    return katex.renderToString(group, { displayMode: false });
+  });
+
+  data.content = util.htmlTag('link',{
+    rel: 'stylesheet',
+    type: 'text/css',
+    href: 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css'
+  }) + data.content;
+
+  return data;
 });
